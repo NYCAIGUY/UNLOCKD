@@ -622,21 +622,23 @@
         .auth-modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
+            inset: 0;
             width: 100%;
-            height: 100%;
+            height: 100dvh;
             background: rgba(0, 0, 0, 0.95);
             z-index: 2000;
-            align-items: center;
-            justify-content: center;
             backdrop-filter: blur(12px);
             overflow-y: auto;
-            padding: 40px 20px;
+            -webkit-overflow-scrolling: touch;
+            padding: max(18px, env(safe-area-inset-top, 0px)) 20px max(18px, env(safe-area-inset-bottom, 0px));
         }
 
         .auth-modal.active {
-            display: flex;
+            display: block;
+        }
+
+        .auth-modal .auth-container {
+            margin: 0 auto;
         }
 
         .auth-container {
@@ -1268,12 +1270,8 @@
             }
 
             .auth-modal {
-                align-items: flex-start;
-                justify-content: flex-start;
-                -webkit-overflow-scrolling: touch;
                 overscroll-behavior: contain;
-                padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
-                padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+                padding: calc(env(safe-area-inset-top, 0px) + 12px) 14px calc(env(safe-area-inset-bottom, 0px) + 20px);
             }
 
             .auth-container {
@@ -2127,6 +2125,13 @@
         document.getElementById('houseContinueBtn').addEventListener('click', () => {
             document.getElementById('houseInfoModal').classList.remove('active');
             authModal.classList.add('active');
+
+            // Force modal to top on mobile Safari to prevent clipped first cards
+            requestAnimationFrame(() => {
+                authModal.scrollTop = 0;
+                const container = authModal.querySelector('.auth-container');
+                if (container) container.scrollTop = 0;
+            });
         });
 
         // ============================================
