@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNLOCKD - Break 20:00 in the 5K</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000000;
+            color: #ffffff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ============================================
+           ROBINHOOD-STYLE ANIMATED GRAPH BACKGROUND
+           ============================================ */
+        .graph-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .graph-background canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ============================================
+           SOCIAL PROOF SCROLLING BANNER - Enhanced
+           ============================================ */
+        .proof-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #0d0d0d 100%);
+            border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+            padding: 16px 0;
+            overflow: hidden;
+            z-index: 1000;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.8);
+        }
+
+        .proof-scroll {
+            display: flex;
+            animation: scroll-infinite 50s linear infinite;
+            white-space: nowrap;
+        }
+
+        .proof-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 60px;
+            font-size: 1rem;
+            color: #e8e8e8;
+            font-weight: 500;
+            min-width: fit-content;
+            letter-spacing: -0.01em;
+        }
+
+        .proof-icon {
+            font-size: 1.5rem;
+            filter: drop-shadow(0 0 12px rgba(0, 255, 136, 0.8));
+        }
+
+        .proof-number {
+            color: #00ff88;
+            font-weight: 800;
+            font-size: 1.25rem;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+        }
+
+        .proof-divider {
+            display: inline-block;
+            width: 1px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 40px;
+        }
+
+        @keyframes scroll-infinite {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* ============================================
+           DYNAMIC POPUP NOTIFICATIONS
+           ============================================ */
+        .notification-popup {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(15, 15, 15, 0.95));
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 16px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 999;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 255, 136, 0.2);
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+        }
+
+        .notification-popup.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .notification-popup.hide {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+
+        .notification-icon {
+            font-size: 2rem;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.8));
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-text {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .notification-detail {
+            font-size: 0.8125rem;
+            color: #888;
+        }
+
+        .notification-highlight {
+            color: #00ff88;
+            font-weight: 700;
+        }
+
+        /* ============================================
+           HERO SECTION
+           ============================================ */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 95vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 24px 60px;
+        }
+
+        .hero h1 {
+            font-size: 5.5rem;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #ffffff 0%, #888888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.875rem;
+            color: #aaa;
+            margin-bottom: 24px;
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        .hero-secondary {
+            font-size: 1.375rem;
+            color: #666;
+            margin-bottom: 56px;
+            font-weight: 400;
+            line-height: 1.6;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-highlight {
+            color: #00ff88;
+            font-weight: 700;
+        }
+
+        .btn-hero {
+            background: #00ff88;
+            color: #000000;
+            border: none;
+            padding: 24px 64px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-hero:hover {
+            background: #00dd77;
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 255, 136, 0.4);
+        }
+
+        /* ============================================
+           PAIN POINT CARDS
+           ============================================ */
+        .pain-section {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 24px;
+        }
+
+        .pain-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 80px;
+            letter-spacing: -0.02em;
+        }
+
+        .pain-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 32px;
+        }
+
+        .pain-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 48px 40px;
+            transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pain-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #00ff88, #00dd77);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 400ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .pain-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .pain-card:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border-color: rgba(0, 255, 136, 0.3);
+            transform: translateY(-12px);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 255, 136, 0.1);
+        }
+
+        .pain-emoji {
+            font-size: 3.5rem;
+            margin-bottom: 28px;
+            display: block;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .pain-problem {
+            font-size: 1.625rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #FF4D4D;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+
+        .pain-description {
+            font-size: 1.0625rem;
+            color: #aaa;
+            line-height: 1.8;
+            margin-bottom: 28px;
+        }
+
+        .pain-solution {
+            font-size: 1rem;
+            color: #00ff88;
+            font-weight: 600;
+            padding: 20px 24px;
+            background: rgba(0, 255, 136, 0.08);
+            border-radius: 12px;
+            border-left: 4px solid #00ff88;
+            line-height: 1.6;
+        }
+
+        /* ============================================
+           QUIZ SECTION
+           ============================================ */
+        .quiz-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            z-index: 2500;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quiz-modal.active {
+            display: flex;
+        }
+
+        .quiz-container {
+            max-width: 600px;
+            width: 100%;
+            padding: 0 24px;
+        }
+
+        .quiz-progress {
+            width: 100%;
+            height: 3px;
+            background: #1a1a1a;
+            margin-bottom: 80px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .quiz-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00dd77);
+            transition: width 800ms cubic-bezier(0.4, 0, 0.6, 1);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            position: relative;
+        }
+
+        .quiz-progress-fill::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 6px;
+            height: 100%;
+            background: #ffffff;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+        }
+
+        .quiz-question {
+            opacity: 0;
+            animation: slideIn 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .quiz-label {
+            font-size: 0.875rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 32px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .quiz-title {
+            font-size: 2.75rem;
+            font-weight: 800;
+            margin-bottom: 60px;
+            text-align: center;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .quiz-input,
+        .quiz-select {
+            width: 100%;
+            background: #0a0a0a;
+            border: 2px solid #1a1a1a;
+            color: #ffffff;
+            padding: 28px;
+            font-size: 1.75rem;
+            font-weight: 700;
+            border-radius: 12px;
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            text-align: center;
+        }
+
+        .quiz-input:focus,
+        .quiz-select:focus {
+            outline: none;
+            border-color: #00ff88;
+            background: #000000;
+            box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .quiz-unit {
+            display: block;
+            text-align: center;
+            margin-top: 16px;
+            font-size: 1rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .quiz-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 60px;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 2px solid #2a2a2a;
+            color: #888;
+            padding: 20px 32px;
+            font-size: 1.0625rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 200ms ease;
+            flex: 1;
+        }
+
+        .btn-back:hover {
+            border-color: #3a3a3a;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .btn-next {
+            background: #00ff88;
+            border: none;
+            color: #000000;
+            padding: 20px 32px;
+            font-size: 1.0625rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 2;
+        }
+
+        .btn-next:hover {
+            background: #00dd77;
+            transform: translateY(-2px);
+        }
+
+        .btn-next:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ============================================
+           HOUSE INFO MODAL
+           ============================================ */
+        .house-info-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            z-index: 2400;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 40px 20px;
+        }
+
+        .house-info-modal.active {
+            display: flex;
+        }
+
+        .house-info-container {
+            max-width: 900px;
+            width: 100%;
+            padding: 0 24px;
+        }
+
+        .house-info-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .house-info-title {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 0%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .house-info-subtitle {
+            font-size: 1.375rem;
+            color: #888;
+            line-height: 1.6;
+        }
+
+        .house-grid {
+            display: grid;
+            gap: 24px;
+            margin-bottom: 56px;
+        }
+
+        .house-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 32px 36px;
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .house-item:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border-color: rgba(0, 255, 136, 0.3);
+            transform: translateX(8px);
+        }
+
+        .house-icon {
+            font-size: 3rem;
+            flex-shrink: 0;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+        }
+
+        .house-content {
+            flex: 1;
+        }
+
+        .house-name {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.01em;
+        }
+
+        .house-emberfall .house-name { color: #FF6B35; }
+        .house-ironoak .house-name { color: #8B7355; }
+        .house-stormforge .house-name { color: #4A90E2; }
+        .house-nightblade .house-name { color: #9370DB; }
+        .house-goldcrest .house-name { color: #FFD700; }
+
+        .house-description {
+            font-size: 1.0625rem;
+            color: #aaa;
+            line-height: 1.6;
+        }
+
+        .house-continue-btn {
+            width: 100%;
+            background: #00ff88;
+            border: none;
+            color: #000000;
+            padding: 24px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3);
+        }
+
+        .house-continue-btn:hover {
+            background: #00dd77;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 255, 136, 0.4);
+        }
+
+        /* ============================================
+           AUTH MODAL - Enhanced with Pain Focus
+           ============================================ */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(12px);
+            overflow-y: auto;
+            padding: 40px 20px;
+        }
+
+        .auth-modal.active {
+            display: flex;
+        }
+
+        .auth-container {
+            background: linear-gradient(135deg, #0f0f0f 0%, #0a0a0a 100%);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 24px;
+            padding: 64px 56px;
+            max-width: 680px;
+            width: 100%;
+            text-align: left;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .auth-title {
+            font-size: 2.75rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .auth-subtitle {
+            color: #FF4D4D;
+            font-size: 1.375rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .auth-description {
+            color: #aaa;
+            font-size: 1.0625rem;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        .auth-pain-list {
+            margin: 32px 0 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .auth-pain-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px;
+            background: rgba(255, 77, 77, 0.05);
+            border-left: 3px solid #FF4D4D;
+            border-radius: 8px;
+        }
+
+        .auth-pain-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .auth-pain-text {
+            font-size: 1rem;
+            color: #ddd;
+            line-height: 1.6;
+        }
+
+        .auth-solution-box {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 40px;
+        }
+
+        .auth-solution-title {
+            color: #00ff88;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .auth-solution-text {
+            color: #ccc;
+            font-size: 1.0625rem;
+            line-height: 1.7;
+        }
+
+        .auth-form-section {
+            margin-top: 40px;
+        }
+
+        .auth-form-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .auth-email-input {
+            width: 100%;
+            background: #0a0a0a;
+            border: 2px solid #2a2a2a;
+            color: #ffffff;
+            padding: 20px;
+            font-size: 1.125rem;
+            border-radius: 12px;
+            transition: all 300ms ease;
+            font-family: inherit;
+            margin-bottom: 16px;
+        }
+
+        .auth-email-input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1);
+        }
+
+        .auth-email-input::placeholder {
+            color: #555;
+        }
+
+        .auth-submit-btn {
+            width: 100%;
+            background: #00ff88;
+            border: none;
+            color: #000000;
+            padding: 22px 24px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3);
+        }
+
+        .auth-submit-btn:hover {
+            background: #00dd77;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 255, 136, 0.4);
+        }
+
+        .auth-submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-privacy {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 0.875rem;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* ============================================
+           LOADING PAGE - Enhanced Animation
+           ============================================ */
+        .loading-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .loading-page.active {
+            display: flex;
+        }
+
+        /* Animated grid background for loading */
+        .loading-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .loading-grid canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Pulsing orb animation */
+        .loading-orb {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.3) 0%, transparent 70%);
+            animation: pulse-orb 3s ease-in-out infinite;
+            filter: blur(60px);
+        }
+
+        @keyframes pulse-orb {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: scale(1.3);
+                opacity: 0.6;
+            }
+        }
+
+        /* Main spinner with rings */
+        .loading-spinner-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin-bottom: 60px;
+        }
+
+        .loading-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid transparent;
+        }
+
+        .loading-ring-1 {
+            width: 200px;
+            height: 200px;
+            border-top-color: #00ff88;
+            animation: spin 2s linear infinite;
+        }
+
+        .loading-ring-2 {
+            width: 160px;
+            height: 160px;
+            top: 20px;
+            left: 20px;
+            border-right-color: rgba(0, 255, 136, 0.6);
+            animation: spin 3s linear infinite reverse;
+        }
+
+        .loading-ring-3 {
+            width: 120px;
+            height: 120px;
+            top: 40px;
+            left: 40px;
+            border-bottom-color: rgba(0, 255, 136, 0.4);
+            animation: spin 4s linear infinite;
+        }
+
+        .loading-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #00ff88 0%, transparent 70%);
+            border-radius: 50%;
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% {
+                opacity: 0.6;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+
+        /* Loading content */
+        .loading-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 600px;
+            padding: 0 24px;
+        }
+
+        .loading-text {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .loading-steps {
+            margin: 32px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .loading-step {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 1.0625rem;
+            color: #666;
+            opacity: 0;
+            animation: fadeInStep 0.6s ease-out forwards;
+        }
+
+        .loading-step.active {
+            color: #00ff88;
+        }
+
+        .loading-step:nth-child(1) { animation-delay: 0.2s; }
+        .loading-step:nth-child(2) { animation-delay: 0.8s; }
+        .loading-step:nth-child(3) { animation-delay: 1.4s; }
+        .loading-step:nth-child(4) { animation-delay: 2.0s; }
+
+        @keyframes fadeInStep {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .loading-step-icon {
+            font-size: 1.5rem;
+        }
+
+        .loading-checkmark {
+            display: none;
+            color: #00ff88;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+
+        .loading-step.complete .loading-checkmark {
+            display: inline;
+            animation: checkPop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes checkPop {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.3);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .loading-email-box {
+            margin-top: 48px;
+            padding: 32px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 16px;
+            animation: boxGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes boxGlow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 255, 136, 0.4);
+            }
+        }
+
+        .loading-email-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .loading-email-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .loading-email {
+            color: #00ff88;
+            font-weight: 700;
+            font-size: 1.375rem;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .loading-subtext {
+            font-size: 1rem;
+            color: #888;
+            margin-top: 16px;
+            line-height: 1.6;
+        }
+
+        /* Floating particles on loading page */
+        .loading-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .loading-particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #00ff88;
+            border-radius: 50%;
+            opacity: 0;
+            animation: float-particle 6s ease-in-out infinite;
+        }
+
+        @keyframes float-particle {
+            0%, 100% {
+                opacity: 0;
+                transform: translateY(100vh) translateX(0);
+            }
+            10% {
+                opacity: 0.8;
+            }
+            50% {
+                opacity: 0.4;
+                transform: translateY(-100vh) translateX(100px);
+            }
+            90% {
+                opacity: 0.2;
+            }
+        }
+
+        /* ============================================
+           CTA SECTION
+           ============================================ */
+        .cta-section {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 100px 24px;
+        }
+
+        .cta-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 32px;
+            letter-spacing: -0.03em;
+        }
+
+        .cta-subtitle {
+            font-size: 1.5rem;
+            color: #888;
+            margin-bottom: 48px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .pain-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .notification-popup {
+                right: 16px;
+                bottom: 16px;
+                max-width: calc(100% - 32px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Graph Background -->
+    <div class="graph-background">
+        <canvas id="graphCanvas"></canvas>
+    </div>
+
+    <!-- Social Proof Scrolling Banner -->
+    <div class="proof-banner">
+        <div class="proof-scroll">
+            <div class="proof-item">
+                <span class="proof-icon">👥</span>
+                <span><span class="proof-number">1,247</span> runners joined in the last 30 days</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">⚡</span>
+                <span><span class="proof-number">89 athletes</span> broke sub-20 this month</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">📈</span>
+                <span>Average improvement: <span class="proof-number">1:47</span> faster in 12 weeks</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">💪</span>
+                <span><span class="proof-number">2.3x</span> strength gains reported</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">🏆</span>
+                <span><span class="proof-number">147 PRs</span> logged in the last 7 days</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">🎯</span>
+                <span><span class="proof-number">94%</span> of users see measurable progress in 4 weeks</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">⏱️</span>
+                <span>Average VO₂ max increase: <span class="proof-number">+6.2 points</span></span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">🔥</span>
+                <span><span class="proof-number">3 athletes</span> joined Goldcrest House today</span>
+            </div>
+            <!-- Duplicate for seamless loop -->
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">👥</span>
+                <span><span class="proof-number">1,247</span> runners joined in the last 30 days</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">⚡</span>
+                <span><span class="proof-number">89 athletes</span> broke sub-20 this month</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">📈</span>
+                <span>Average improvement: <span class="proof-number">1:47</span> faster in 12 weeks</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">💪</span>
+                <span><span class="proof-number">2.3x</span> strength gains reported</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">🏆</span>
+                <span><span class="proof-number">147 PRs</span> logged in the last 7 days</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">🎯</span>
+                <span><span class="proof-number">94%</span> of users see measurable progress in 4 weeks</span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">⏱️</span>
+                <span>Average VO₂ max increase: <span class="proof-number">+6.2 points</span></span>
+            </div>
+            <span class="proof-divider"></span>
+            <div class="proof-item">
+                <span class="proof-icon">🔥</span>
+                <span><span class="proof-number">3 athletes</span> joined Goldcrest House today</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Popup Notifications -->
+    <div class="notification-popup" id="notification">
+        <div class="notification-icon" id="notificationIcon">🎉</div>
+        <div class="notification-content">
+            <div class="notification-text" id="notificationText"></div>
+            <div class="notification-detail" id="notificationDetail"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div>
+                <h1>UNLOCKD</h1>
+                <div class="hero-subtitle">You're Not Far From Sub-20:00 5K.</div>
+                <div class="hero-secondary">
+                    You're just not training with a system.
+                    <br><br>
+                    More miles won't fix it. More lifting won't either.
+                    <br>
+                    Speed without strength plateaus. Strength without structure doesn't transfer.
+                    <br><br>
+                    So you hover. Close...but not breaking through.
+                    <br><br>
+                    <span class="hero-highlight">UNLOCKD connects both.</span> Measures your real position. Shows you the gap.
+                </div>
+                <button class="btn-hero" id="heroBtn">See Where You Stand</button>
+            </div>
+        </section>
+
+        <!-- Pain Point Cards -->
+        <section class="pain-section">
+            <h2 class="pain-title">You're Stuck. Here's Why.</h2>
+            <div class="pain-grid">
+                <div class="pain-card">
+                    <span class="pain-emoji">😤</span>
+                    <div class="pain-problem">Training hard but times aren't dropping</div>
+                    <div class="pain-description">
+                        You're hitting the track 4x/week. Logging the miles. Crushing intervals. But your 5K PR hasn't moved in 8 months. You don't know if you're doing too much, too little, or training the wrong systems entirely.
+                    </div>
+                    <div class="pain-solution">
+                        <strong>UNLOCKD shows you:</strong> Your exact performance score, which training zones need work, and a clear path to sub-20.
+                    </div>
+                </div>
+
+                <div class="pain-card">
+                    <span class="pain-emoji">📊</span>
+                    <div class="pain-problem">Drowning in data with zero clarity</div>
+                    <div class="pain-description">
+                        Your watch tracks pace, heart rate zones, cadence, VO₂ max, power. You have spreadsheets full of numbers. But you can't answer the simple question: "Am I actually getting faster?"
+                    </div>
+                    <div class="pain-solution">
+                        <strong>UNLOCKD shows you:</strong> One score. One graph. One clear trend line showing if you're improving or spinning your wheels.
+                    </div>
+                </div>
+
+                <div class="pain-card">
+                    <span class="pain-emoji">🎯</span>
+                    <div class="pain-problem">No benchmark for what "good enough" looks like</div>
+                    <div class="pain-description">
+                        Is your VO₂ max of 54 enough? Should you squat more? Is 45 miles/week sufficient? You're flying blind with no idea where you actually stand to break 20:00.
+                    </div>
+                    <div class="pain-solution">
+                        <strong>UNLOCKD shows you:</strong> Your performance house ranking and exactly how many points separate you from the next level.
+                    </div>
+                </div>
+
+                <div class="pain-card">
+                    <span class="pain-emoji">🔥</span>
+                    <div class="pain-problem">Lost all motivation because nothing feels like progress</div>
+                    <div class="pain-description">
+                        You ran 6 days last week. Did all the strength work. Time didn't improve. Effort feels the same. Why keep grinding when you can't see if it's actually working?
+                    </div>
+                    <div class="pain-solution">
+                        <strong>UNLOCKD shows you:</strong> Daily score changes. Workout credits. House advancement. Visual proof that the work is paying off.
+                    </div>
+                </div>
+
+                <div class="pain-card">
+                    <span class="pain-emoji">⏱️</span>
+                    <div class="pain-problem">Don't know if sub-20 is even realistic</div>
+                    <div class="pain-description">
+                        You're 29, running 5:45 pace in workouts, stuck at 21:15 in races. Is breaking 20:00 actually possible for you? Or are you wasting months chasing something out of reach?
+                    </div>
+                    <div class="pain-solution">
+                        <strong>UNLOCKD shows you:</strong> Your projected 5K time based on current fitness. Know if you're 2 months away or 2 years away.
+                    </div>
+                </div>
+
+                <div class="pain-card">
+                    <span class="pain-emoji">💪</span>
+                    <div class="pain-problem">Skipping strength because you don't know it matters</div>
+                    <div class="pain-description">
+                        You only run. Gym sessions get skipped because "runners don't need to lift." But your stride is weak, you're injury-prone, and your finishing kick has zero pop.
+                    </div>
+                    <div class="pain-solution">
+                        <strong>UNLOCKD shows you:</strong> Your strength index score. Points earned for every gym session. Watch strength work directly move your performance score.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final CTA -->
+        <section class="cta-section">
+            <h2 class="cta-title">Ready to Break Through?</h2>
+            <div class="cta-subtitle">Join 1,247 runners who stopped guessing</div>
+            <button class="btn-hero" id="ctaBtn">Get Your Assessment</button>
+        </section>
+    </main>
+
+    <!-- Quiz Modal -->
+    <div class="quiz-modal" id="quizModal">
+        <div class="quiz-container">
+            <div class="quiz-progress">
+                <div class="quiz-progress-fill" id="quizProgress"></div>
+            </div>
+            <div id="quizContent"></div>
+        </div>
+    </div>
+
+    <!-- House Info Modal -->
+    <div class="house-info-modal" id="houseInfoModal">
+        <div class="house-info-container">
+            <div class="house-info-header">
+                <h2 class="house-info-title">If You're In...</h2>
+                <div class="house-info-subtitle">
+                    Based on your assessment, you'll be placed in one of five houses. 
+                    <br>
+                    Each represents where you stand on your path to elite performance.
+                </div>
+            </div>
+
+            <div class="house-grid">
+                <div class="house-item house-emberfall">
+                    <div class="house-icon">🔥</div>
+                    <div class="house-content">
+                        <div class="house-name">Emberfall</div>
+                        <div class="house-description">You just started building momentum.</div>
+                    </div>
+                </div>
+
+                <div class="house-item house-ironoak">
+                    <div class="house-icon">🌳</div>
+                    <div class="house-content">
+                        <div class="house-name">Ironoak</div>
+                        <div class="house-description">You're training consistently and getting stronger.</div>
+                    </div>
+                </div>
+
+                <div class="house-item house-stormforge">
+                    <div class="house-icon">⚡</div>
+                    <div class="house-content">
+                        <div class="house-name">Stormforge</div>
+                        <div class="house-description">Your speed and strength are working together.</div>
+                    </div>
+                </div>
+
+                <div class="house-item house-nightblade">
+                    <div class="house-icon">🌙</div>
+                    <div class="house-content">
+                        <div class="house-name">Nightblade</div>
+                        <div class="house-description">You're very close to elite performance.</div>
+                    </div>
+                </div>
+
+                <div class="house-item house-goldcrest">
+                    <div class="house-icon">👑</div>
+                    <div class="house-content">
+                        <div class="house-name">Goldcrest</div>
+                        <div class="house-description">You train like someone who breaks barriers.</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="house-continue-btn" id="houseContinueBtn">
+                Continue to Get Your Placement →
+            </button>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h2 class="auth-title">You're Almost There</h2>
+            </div>
+
+            <div class="auth-subtitle">Here's what you're dealing with right now:</div>
+            
+            <div class="auth-description">
+                You've been stuck at the same 5K time for months. Training feels random. You're skipping the gym because you don't know if it actually helps. And every time you push hard, something hurts.
+            </div>
+
+            <div class="auth-pain-list">
+                <div class="auth-pain-item">
+                    <span class="auth-pain-icon">⏱️</span>
+                    <div class="auth-pain-text">
+                        <strong>No clear path to sub-20.</strong> You don't know if you're 2 months away or 2 years away from breaking 20:00.
+                    </div>
+                </div>
+
+                <div class="auth-pain-item">
+                    <span class="auth-pain-icon">💪</span>
+                    <div class="auth-pain-text">
+                        <strong>Weak foundation = injuries.</strong> You're skipping strength work, so your stride is unstable and you're one workout away from getting hurt.
+                    </div>
+                </div>
+
+                <div class="auth-pain-item">
+                    <span class="auth-pain-icon">📊</span>
+                    <div class="auth-pain-text">
+                        <strong>Drowning in data with zero clarity.</strong> Your watch tracks everything but you can't answer: "Am I actually getting faster?"
+                    </div>
+                </div>
+            </div>
+
+            <div class="auth-solution-box">
+                <div class="auth-solution-title">What You Get in 60 Seconds:</div>
+                <div class="auth-solution-text">
+                    ✓ Your exact 5K projection based on current fitness<br>
+                    ✓ Front squat strength target to stay injury-free<br>
+                    ✓ VO₂ max score and where you actually stand<br>
+                    ✓ House placement showing your clear path forward<br>
+                    ✓ One simple score that tracks real progress
+                </div>
+            </div>
+
+            <div class="auth-form-section">
+                <div class="auth-form-title">Enter your email to see your results:</div>
+                <input 
+                    type="email" 
+                    id="emailInput" 
+                    class="auth-email-input" 
+                    placeholder="your.email@example.com"
+                    autocomplete="email"
+                />
+                <button class="auth-submit-btn" id="emailSubmitBtn">
+                    Get My Assessment →
+                </button>
+                <div class="auth-privacy">
+                    Your results will be sent to your inbox in 60 seconds. No spam ever.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Page -->
+    <div class="loading-page" id="loadingPage">
+        <!-- Animated grid background -->
+        <div class="loading-grid">
+            <canvas id="loadingGraphCanvas"></canvas>
+        </div>
+
+        <!-- Pulsing orb -->
+        <div class="loading-orb"></div>
+
+        <!-- Floating particles -->
+        <div class="loading-particles" id="loadingParticles"></div>
+
+        <!-- Main spinner -->
+        <div class="loading-spinner-container">
+            <div class="loading-ring loading-ring-1"></div>
+            <div class="loading-ring loading-ring-2"></div>
+            <div class="loading-ring loading-ring-3"></div>
+            <div class="loading-center"></div>
+        </div>
+
+        <!-- Content -->
+        <div class="loading-content">
+            <div class="loading-text">Analyzing Your Performance Profile</div>
+            
+            <div class="loading-steps">
+                <div class="loading-step" id="step1">
+                    <span class="loading-step-icon">🏃</span>
+                    <span>Calculating 5K projection</span>
+                    <span class="loading-checkmark">✓</span>
+                </div>
+                <div class="loading-step" id="step2">
+                    <span class="loading-step-icon">💪</span>
+                    <span>Analyzing strength metrics</span>
+                    <span class="loading-checkmark">✓</span>
+                </div>
+                <div class="loading-step" id="step3">
+                    <span class="loading-step-icon">📊</span>
+                    <span>Computing VO₂ max score</span>
+                    <span class="loading-checkmark">✓</span>
+                </div>
+                <div class="loading-step" id="step4">
+                    <span class="loading-step-icon">👑</span>
+                    <span>Determining your house placement</span>
+                    <span class="loading-checkmark">✓</span>
+                </div>
+            </div>
+
+            <div class="loading-email-box">
+                <div class="loading-email-icon">📧</div>
+                <div class="loading-email-text">Check your email</div>
+                <div class="loading-email" id="userEmail">your-email@example.com</div>
+                <div class="loading-subtext">
+                    Your complete assessment results and house placement are being sent to your inbox right now.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBH8nXHDPzG6uhr5UOXVvPEAVsjjP9Bgsg",
+            authDomain: "unlockd-89f64.firebaseapp.com",
+            projectId: "unlockd-89f64",
+            storageBucket: "unlockd-89f64.firebasestorage.app",
+            messagingSenderId: "957650939687",
+            appId: "1:957650939687:web:c5c7897874e62428e74302"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ============================================
+        // ANIMATED GRAPH BACKGROUND (Robinhood Style)
+        // ============================================
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let points = [];
+        const numPoints = 40;
+
+        for (let i = 0; i < numPoints; i++) {
+            points.push({
+                x: (canvas.width / (numPoints - 1)) * i,
+                y: canvas.height / 2 + Math.sin(i * 0.4) * 120,
+                targetY: canvas.height / 2 + Math.sin(i * 0.4) * 120,
+                velocity: 0
+            });
+        }
+
+        function animateGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const time = Date.now() * 0.0003;
+
+            points.forEach((point, i) => {
+                point.targetY = canvas.height / 2 + Math.sin(i * 0.3 + time) * 100;
+                point.velocity += (point.targetY - point.y) * 0.02;
+                point.velocity *= 0.95;
+                point.y += point.velocity;
+            });
+
+            // Draw gradient fill
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(0, 255, 136, 0.15)');
+            gradient.addColorStop(1, 'transparent');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, canvas.height);
+            points.forEach(point => ctx.lineTo(point.x, point.y));
+            ctx.lineTo(points[points.length - 1].x, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw line
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            points.forEach((point, i) => {
+                if (i === 0) {
+                    ctx.moveTo(point.x, point.y);
+                } else {
+                    ctx.lineTo(point.x, point.y);
+                }
+            });
+            ctx.stroke();
+
+            requestAnimationFrame(animateGraph);
+        }
+
+        animateGraph();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // ============================================
+        // DYNAMIC POPUP NOTIFICATIONS
+        // ============================================
+        const notifications = [
+            { icon: '🎉', text: 'Alex from New York', detail: 'Just signed up', highlight: 'New York' },
+            { icon: '👑', text: 'Someone joined', detail: 'Goldcrest House', highlight: 'Goldcrest' },
+            { icon: '💪', text: 'Sarah hit a PR', detail: '285 lb front squat', highlight: 'PR' },
+            { icon: '⚡', text: 'Marcus from Austin', detail: 'Just broke 20:00', highlight: '20:00' },
+            { icon: '🏃', text: 'Someone joined', detail: 'Nightblade House', highlight: 'Nightblade' },
+            { icon: '📈', text: 'Jessica improved', detail: 'VO₂ max by 6 points', highlight: '6 points' },
+            { icon: '🔥', text: 'David from Seattle', detail: 'Hit 19:47 this morning', highlight: '19:47' },
+            { icon: '⚡', text: 'Someone joined', detail: 'Stormforge House', highlight: 'Stormforge' },
+            { icon: '💪', text: 'Chris hit a PR', detail: '315 lb back squat', highlight: '315 lb' },
+            { icon: '🎯', text: 'Emily from Boston', detail: 'Just completed assessment', highlight: 'Boston' }
+        ];
+
+        let notificationIndex = 0;
+
+        function showNotification() {
+            const popup = document.getElementById('notification');
+            const notif = notifications[notificationIndex];
+
+            document.getElementById('notificationIcon').textContent = notif.icon;
+            document.getElementById('notificationText').textContent = notif.text;
+            document.getElementById('notificationDetail').innerHTML = notif.detail.replace(notif.highlight, `<span class="notification-highlight">${notif.highlight}</span>`);
+
+            popup.classList.add('show');
+
+            setTimeout(() => {
+                popup.classList.remove('show');
+                popup.classList.add('hide');
+
+                setTimeout(() => {
+                    popup.classList.remove('hide');
+                    notificationIndex = (notificationIndex + 1) % notifications.length;
+                }, 400);
+            }, 4000);
+        }
+
+        // Show first notification after 3 seconds
+        setTimeout(showNotification, 3000);
+
+        // Show new notification every 8 seconds
+        setInterval(showNotification, 8000);
+
+        // ============================================
+        // QUIZ LOGIC
+        // ============================================
+        const questions = [
+            {
+                label: "QUESTION 1 OF 7",
+                title: "What is your age?",
+                type: "number",
+                placeholder: "28",
+                unit: "years",
+                key: "age"
+            },
+            {
+                label: "QUESTION 2 OF 7",
+                title: "What is your biological sex?",
+                type: "select",
+                options: ["Male", "Female"],
+                key: "sex"
+            },
+            {
+                label: "QUESTION 3 OF 7",
+                title: "What is your current 5K time?",
+                type: "text",
+                placeholder: "22:30",
+                unit: "MM:SS format",
+                key: "fiveK"
+            },
+            {
+                label: "QUESTION 4 OF 7",
+                title: "Cooper Test: How far can you run in 12 minutes?",
+                type: "number",
+                placeholder: "3200",
+                unit: "meters",
+                key: "cooper"
+            },
+            {
+                label: "QUESTION 5 OF 7",
+                title: "What is your bodyweight?",
+                type: "number",
+                placeholder: "165",
+                unit: "pounds",
+                key: "bodyweight"
+            },
+            {
+                label: "QUESTION 6 OF 7",
+                title: "What is your max front squat?",
+                type: "number",
+                placeholder: "185",
+                unit: "pounds",
+                key: "frontSquat"
+            },
+            {
+                label: "QUESTION 7 OF 7",
+                title: "Weekly mileage?",
+                type: "number",
+                placeholder: "35",
+                unit: "miles per week",
+                key: "mileage"
+            }
+        ];
+
+        let currentQuestion = 0;
+        const answers = {};
+
+        const quizModal = document.getElementById('quizModal');
+        const quizContent = document.getElementById('quizContent');
+        const quizProgress = document.getElementById('quizProgress');
+
+        function showQuiz() {
+            quizModal.classList.add('active');
+            showQuestion(0);
+        }
+
+        function showQuestion(index) {
+            currentQuestion = index;
+            const question = questions[index];
+            const progress = ((index + 1) / questions.length) * 100;
+
+            quizProgress.style.width = progress + '%';
+
+            let inputHTML = '';
+
+            if (question.type === 'select') {
+                inputHTML = `
+                    <select class="quiz-select" id="answer" required>
+                        <option value="">Select...</option>
+                        ${question.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                    </select>
+                `;
+            } else {
+                inputHTML = `
+                    <input 
+                        type="${question.type}" 
+                        class="quiz-input" 
+                        id="answer" 
+                        placeholder="${question.placeholder}" 
+                        required
+                    />
+                    ${question.unit ? `<span class="quiz-unit">${question.unit}</span>` : ''}
+                `;
+            }
+
+            quizContent.innerHTML = `
+                <div class="quiz-question">
+                    <div class="quiz-label">${question.label}</div>
+                    <div class="quiz-title">${question.title}</div>
+                    ${inputHTML}
+                    <div class="quiz-actions">
+                        ${index > 0 ? `<button class="btn-back" onclick="previousQuestion()">← Back</button>` : ''}
+                        <button class="btn-next" id="nextBtn" onclick="nextQuestion()" ${index === 0 ? 'style="flex: 1"' : ''}>
+                            ${index === questions.length - 1 ? 'Complete →' : 'Next →'}
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Pre-fill if answer exists
+            const answerInput = document.getElementById('answer');
+            if (answers[question.key]) {
+                answerInput.value = answers[question.key];
+                document.getElementById('nextBtn').disabled = false;
+            } else {
+                document.getElementById('nextBtn').disabled = true;
+            }
+
+            // Enable/disable next button based on input
+            answerInput.addEventListener('input', () => {
+                document.getElementById('nextBtn').disabled = !answerInput.value;
+            });
+
+            answerInput.addEventListener('change', () => {
+                document.getElementById('nextBtn').disabled = !answerInput.value;
+            });
+
+            // Focus input
+            setTimeout(() => answerInput.focus(), 100);
+        }
+
+        function nextQuestion() {
+            const question = questions[currentQuestion];
+            const value = document.getElementById('answer').value;
+
+            if (!value) return;
+
+            answers[question.key] = value;
+
+            if (currentQuestion < questions.length - 1) {
+                showQuestion(currentQuestion + 1);
+            } else {
+                // Quiz complete - store answers and show auth
+                completeQuiz();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                showQuestion(currentQuestion - 1);
+            }
+        }
+
+        function completeQuiz() {
+            // Store quiz answers
+            localStorage.setItem('unlockd_quiz_answers', JSON.stringify(answers));
+            console.log('✅ Quiz completed:', answers);
+
+            // Hide quiz, show house info
+            quizModal.classList.remove('active');
+            document.getElementById('houseInfoModal').classList.add('active');
+        }
+
+        // House info continue button
+        document.getElementById('houseContinueBtn').addEventListener('click', () => {
+            document.getElementById('houseInfoModal').classList.remove('active');
+            authModal.classList.add('active');
+        });
+
+        // ============================================
+        // AUTHENTICATION FLOW - Email Only
+        // ============================================
+        const heroBtn = document.getElementById('heroBtn');
+        const ctaBtn = document.getElementById('ctaBtn');
+        const authModal = document.getElementById('authModal');
+        const emailInput = document.getElementById('emailInput');
+        const emailSubmitBtn = document.getElementById('emailSubmitBtn');
+        const loadingPage = document.getElementById('loadingPage');
+
+        // Show quiz when clicking CTA buttons
+        heroBtn.addEventListener('click', showQuiz);
+        ctaBtn.addEventListener('click', showQuiz);
+
+        // Enable/disable submit button based on email input
+        emailInput.addEventListener('input', () => {
+            const email = emailInput.value.trim();
+            const isValid = email.includes('@') && email.includes('.');
+            emailSubmitBtn.disabled = !isValid;
+        });
+
+        // Handle email submission
+        emailSubmitBtn.addEventListener('click', () => {
+            const email = emailInput.value.trim();
+            
+            if (!email.includes('@') || !email.includes('.')) {
+                alert('Please enter a valid email address');
+                return;
+            }
+
+            handleAuthSuccess({ email: email, emailOnly: true });
+        });
+
+        // Allow Enter key to submit
+        emailInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                emailSubmitBtn.click();
+            }
+        });
+
+        // Handle successful authentication
+        function handleAuthSuccess(user) {
+            console.log('User authenticated:', user.email);
+
+            // Get quiz answers
+            const quizAnswers = JSON.parse(localStorage.getItem('unlockd_quiz_answers') || '{}');
+
+            // Hide auth modal
+            authModal.classList.remove('active');
+
+            // Show loading page
+            loadingPage.classList.add('active');
+            document.getElementById('userEmail').textContent = user.email || 'your email';
+
+            // Start loading animations
+            startLoadingAnimations();
+
+            // Store user data in Firestore (only if we have a UID from Google auth)
+            if (db && user.email) {
+                const userData = {
+                    email: user.email,
+                    signupDate: firebase.firestore.FieldValue.serverTimestamp(),
+                    source: 'landing_page',
+                    authMethod: user.emailOnly ? 'email_collected' : 'google_auth',
+                    quizAnswers: quizAnswers
+                };
+
+                // If Google auth, we have a UID
+                if (user.uid) {
+                    db.collection('users').doc(user.uid).set(userData, { merge: true })
+                        .then(() => console.log('✅ User data saved to Firestore (with quiz answers)'))
+                        .catch(err => console.error('Firestore error:', err));
+                } else {
+                    // Email only - create new document
+                    db.collection('users').add(userData)
+                        .then(() => console.log('✅ Email and quiz answers saved to Firestore'))
+                        .catch(err => console.error('Firestore error:', err));
+                }
+            }
+
+            // Simulate analysis time (3 seconds)
+            setTimeout(() => {
+                console.log('✅ Analysis complete. Email would be sent to:', user.email);
+                console.log('📊 Quiz answers stored:', quizAnswers);
+                // In production, trigger email sending here via Cloud Function
+            }, 3000);
+        }
+
+        // ============================================
+        // LOADING PAGE ANIMATIONS
+        // ============================================
+        function startLoadingAnimations() {
+            // Animate loading steps sequentially
+            const steps = ['step1', 'step2', 'step3', 'step4'];
+            steps.forEach((stepId, index) => {
+                setTimeout(() => {
+                    const step = document.getElementById(stepId);
+                    step.classList.add('active');
+                    
+                    setTimeout(() => {
+                        step.classList.add('complete');
+                    }, 800);
+                }, index * 1000);
+            });
+
+            // Create floating particles
+            createLoadingParticles();
+
+            // Animate loading graph background
+            animateLoadingGraph();
+        }
+
+        function createLoadingParticles() {
+            const container = document.getElementById('loadingParticles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'loading-particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (4 + Math.random() * 4) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        function animateLoadingGraph() {
+            const canvas = document.getElementById('loadingGraphCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const points = [];
+            const numPoints = 50;
+
+            for (let i = 0; i < numPoints; i++) {
+                points.push({
+                    x: (canvas.width / (numPoints - 1)) * i,
+                    y: canvas.height / 2 + Math.sin(i * 0.3) * 80,
+                    targetY: canvas.height / 2,
+                    velocity: 0
+                });
+            }
+
+            function animate() {
+                if (!loadingPage.classList.contains('active')) return;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const time = Date.now() * 0.0005;
+
+                points.forEach((point, i) => {
+                    point.targetY = canvas.height / 2 + Math.sin(i * 0.25 + time) * 60;
+                    point.velocity += (point.targetY - point.y) * 0.03;
+                    point.velocity *= 0.94;
+                    point.y += point.velocity;
+                });
+
+                // Draw gradient fill
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, 'rgba(0, 255, 136, 0.2)');
+                gradient.addColorStop(1, 'transparent');
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, canvas.height);
+                points.forEach(point => ctx.lineTo(point.x, point.y));
+                ctx.lineTo(points[points.length - 1].x, canvas.height);
+                ctx.closePath();
+                ctx.fill();
+
+                // Draw line
+                ctx.strokeStyle = '#00ff88';
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = 'rgba(0, 255, 136, 0.5)';
+                ctx.beginPath();
+                points.forEach((point, i) => {
+                    if (i === 0) {
+                        ctx.moveTo(point.x, point.y);
+                    } else {
+                        ctx.lineTo(point.x, point.y);
+                    }
+                });
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        console.log('✅ UNLOCKD Enhanced Landing Page Loaded');
+        console.log('📧 Email auth: Simplified collection (no Firebase Email Auth required)');
+        console.log('🔷 Google auth: Standard popup flow');
+    </script>
+</body>
+</html>
