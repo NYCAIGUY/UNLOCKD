@@ -1132,19 +1132,281 @@
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .hero h1 {
-                font-size: 3rem;
+                font-size: 4rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.5rem;
+            }
+
+            .hero-secondary {
+                font-size: 1.125rem;
+                max-width: 92%;
+            }
+
+            .pain-title,
+            .cta-title {
+                font-size: 2.4rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .proof-banner {
+                padding: 12px 0;
+            }
+
+            .proof-item {
+                padding: 0 32px;
+                font-size: 0.875rem;
+                gap: 8px;
+            }
+
+            .proof-number {
+                font-size: 1.05rem;
+            }
+
+            .hero {
+                min-height: auto;
+                padding: 96px 18px 40px;
+            }
+
+            .hero h1 {
+                font-size: 2.75rem;
+                margin-bottom: 18px;
+            }
+
+            .hero-subtitle {
+                font-size: 1.2rem;
+                margin-bottom: 14px;
+            }
+
+            .hero-secondary {
+                font-size: 1rem;
+                margin-bottom: 32px;
+                line-height: 1.55;
+            }
+
+            .btn-hero {
+                width: 100%;
+                max-width: 360px;
+                padding: 16px 20px;
+                font-size: 1.05rem;
+            }
+
+            .pain-section,
+            .cta-section {
+                padding: 54px 18px;
+            }
+
+            .pain-title {
+                font-size: 1.95rem;
+                margin-bottom: 36px;
             }
 
             .pain-grid {
                 grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .pain-card {
+                padding: 28px 22px;
+                border-radius: 14px;
+            }
+
+            .pain-problem {
+                font-size: 1.24rem;
+                margin-bottom: 12px;
+            }
+
+            .pain-description {
+                font-size: 0.96rem;
+                line-height: 1.65;
+                margin-bottom: 16px;
+            }
+
+            .pain-solution {
+                font-size: 0.92rem;
+                padding: 14px 14px;
+            }
+
+            .quiz-container {
+                padding: 0 16px;
+            }
+
+            .quiz-progress {
+                margin-bottom: 34px;
+            }
+
+            .quiz-title {
+                font-size: 1.85rem;
+                margin-bottom: 28px;
+                line-height: 1.2;
+            }
+
+            .quiz-input,
+            .quiz-select {
+                font-size: 1.2rem;
+                padding: 16px;
+            }
+
+            .quiz-actions {
+                margin-top: 30px;
+                flex-direction: column;
+            }
+
+            .btn-back,
+            .btn-next {
+                width: 100%;
+                padding: 16px;
+            }
+
+            .house-info-modal,
+            .auth-modal {
+                padding: 18px 14px;
+            }
+
+            .house-info-title,
+            .auth-title {
+                font-size: 2rem;
+            }
+
+            .house-info-subtitle,
+            .auth-subtitle {
+                font-size: 1.05rem;
+            }
+
+            .house-item {
+                padding: 20px 18px;
+                gap: 14px;
+            }
+
+            .house-icon {
+                font-size: 2rem;
+            }
+
+            .house-name {
+                font-size: 1.2rem;
+            }
+
+            .house-description {
+                font-size: 0.95rem;
+            }
+
+            .auth-container {
+                padding: 30px 20px;
+                border-radius: 16px;
+            }
+
+            .auth-pain-item {
+                padding: 14px;
+                gap: 10px;
+            }
+
+            .auth-email-input,
+            .auth-submit-btn {
+                padding: 16px;
+                font-size: 1rem;
+            }
+
+            .loading-spinner-container {
+                width: 150px;
+                height: 150px;
+                margin-bottom: 34px;
+            }
+
+            .loading-ring-1 {
+                width: 150px;
+                height: 150px;
+            }
+
+            .loading-ring-2 {
+                width: 116px;
+                height: 116px;
+                top: 17px;
+                left: 17px;
+            }
+
+            .loading-ring-3 {
+                width: 82px;
+                height: 82px;
+                top: 34px;
+                left: 34px;
+            }
+
+            .loading-text {
+                font-size: 1.38rem;
+                line-height: 1.3;
+            }
+
+            .loading-step {
+                font-size: 0.95rem;
+            }
+
+            .loading-email-box {
+                margin-top: 24px;
+                padding: 20px;
+            }
+
+            .loading-email {
+                font-size: 1.1rem;
+                word-break: break-word;
+            }
+
+            .cta-title {
+                font-size: 2rem;
+                margin-bottom: 18px;
+            }
+
+            .cta-subtitle {
+                font-size: 1.05rem;
+                margin-bottom: 26px;
             }
 
             .notification-popup {
-                right: 16px;
-                bottom: 16px;
-                max-width: calc(100% - 32px);
+                right: 12px;
+                bottom: 12px;
+                max-width: calc(100% - 24px);
+                padding: 12px 14px;
+                border-radius: 12px;
+            }
+
+            .notification-icon {
+                font-size: 1.4rem;
+            }
+
+            .notification-text {
+                font-size: 0.86rem;
+            }
+
+            .notification-detail {
+                font-size: 0.74rem;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .quiz-title {
+                font-size: 1.55rem;
+            }
+
+            .pain-title,
+            .cta-title,
+            .house-info-title,
+            .auth-title {
+                font-size: 1.7rem;
+            }
+
+            .proof-banner {
+                display: none;
+            }
+
+            .hero {
+                padding-top: 68px;
             }
         }
     </style>
