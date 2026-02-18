@@ -1894,6 +1894,44 @@
             }
         });
 
+        // Forward signup to your inbox using FormSubmit (no backend required)
+        async function forwardSignupToEmail(user, quizAnswers) {
+            const targetEmail = 'nvulestudios@gmail.com';
+
+            const payload = {
+                _subject: `UNLOCKD New Signup: ${user.email || 'unknown'}`,
+                _template: 'table',
+                _captcha: 'false',
+                submittedAt: new Date().toISOString(),
+                leadEmail: user.email || '',
+                authMethod: user.emailOnly ? 'email_collected' : 'google_auth',
+                age: quizAnswers.age || '',
+                sex: quizAnswers.sex || '',
+                fiveK: quizAnswers.fiveK || '',
+                cooper: quizAnswers.cooper || '',
+                bodyweight: quizAnswers.bodyweight || '',
+                frontSquat: quizAnswers.frontSquat || '',
+                mileage: quizAnswers.mileage || ''
+            };
+
+            try {
+                const res = await fetch(`https://formsubmit.co/ajax/${targetEmail}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (!res.ok || data?.success === 'false') {
+                    throw new Error(data?.message || 'FormSubmit request failed');
+                }
+
+                console.log('✅ Signup forwarded to email:', targetEmail);
+            } catch (err) {
+                console.error('❌ Email forward failed:', err);
+            }
+        }
+
         // Handle successful authentication
         function handleAuthSuccess(user) {
             console.log('User authenticated:', user.email);
@@ -1934,11 +1972,13 @@
                 }
             }
 
+            // Forward every new signup to your email
+            forwardSignupToEmail(user, quizAnswers);
+
             // Simulate analysis time (3 seconds)
             setTimeout(() => {
                 console.log('✅ Analysis complete. Email would be sent to:', user.email);
                 console.log('📊 Quiz answers stored:', quizAnswers);
-                // In production, trigger email sending here via Cloud Function
             }, 3000);
         }
 
